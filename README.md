@@ -1,112 +1,66 @@
-# Harbor manga repo — setup
+# Hamad's Harbor Manga Repo
 
-A Harbor plugin repository is just **static files on an HTTPS host**. No server,
-no build step, no account beyond GitHub. Two files is a valid repo.
+A personal [Harbor](https://github.com/harborstremio/harbor) manga source repository.
+It currently includes a working English-language MangaDex source using MangaDex's public
+API. No account, token, build step, or server is required.
 
-```
-harbor-manga-repo/
-├── repo.json              <- the manifest Harbor reads
-├── my-source.plugin.js    <- one JS file per source
-└── icons/
-    └── my-source.png      <- optional, 128x128 or so
-```
+## Add it to Harbor
 
----
+In Harbor, open **Manga → Set up a source → Extensions**, then add this URL:
 
-## 1. Create the GitHub repo
-
-1. New **public** repo named `harbor-manga-repo`. Public matters — Harbor
-   fetches these files anonymously and cannot log in.
-2. Drop `repo.json`, `my-source.plugin.js` and `icons/` in the root.
-3. Commit.
-
-## 2. Turn on GitHub Pages
-
-Settings → Pages → Source: **Deploy from a branch** → branch `main`, folder
-`/ (root)` → Save. Give it a minute or two.
-
-Your manifest URL is then:
-
-```
-https://<your-username>.github.io/harbor-manga-repo/repo.json
+```text
+https://raw.githubusercontent.com/hamad0original-lgtm/harbor-manga-repo/main/repo.json
 ```
 
-Open that URL in a browser first. If you see the JSON, Harbor will too. If you
-get a 404, Pages hasn't finished deploying or the branch/folder is wrong.
+Refresh the repository, install **MangaDex**, and enable it. GitHub Pages is optional;
+Harbor supports `raw.githubusercontent.com` directly.
 
-**Alternative — a raw gist.** Create a gist with both files, then use the
-`https://gist.githubusercontent.com/.../raw/repo.json` URL. It works, but the
-raw URL changes on every edit unless you use the revision-less form, and raw
-GitHub is aggressively cached (~5 min) and rate-limited. Pages is less
-annoying to live with.
+## Repository layout
 
-## 3. Install it
+```text
+repo.json                          Harbor's install manifest
+plugins/mangadex.plugin.js         The installed MangaDex provider
+examples/source-template.plugin.js A valid starting point for another source
+schema/repo.schema.json            Manifest schema for editors and CI
+scripts/validate.mjs               Dependency-free repository validator
+harbor-manga-plugin-api.md         Harbor's plugin contract reference
+```
 
-Harbor → Manga sources → **Bring your own extensions → Add a repository** →
-paste the `repo.json` URL → **Add**. Your plugin appears in the list; install it.
+## Validate changes
 
----
+Node.js 20 or newer is recommended.
 
-## The two rules that break people
+```sh
+npm run validate
+npm test
+```
 
-**`id` must match in both places.** The `id` field in `repo.json` and the `id`
-property inside the plugin object have to be byte-identical. Mismatched ids is
-the single most common "it installed but does nothing" cause.
+The validator checks the manifest, duplicate IDs, entry paths, JavaScript syntax, and
+the five required provider methods. The tests exercise all provider methods with mocked
+MangaDex responses. GitHub Actions runs both checks after every push and pull request.
 
-**`entry` is resolved relative to `repo.json`.** Keep both files in the same
-directory and `entry` stays a bare filename. If you move the plugin into a
-`plugins/` subfolder, `entry` becomes `plugins/my-source.plugin.js`.
+To make a small live request to MangaDex from your machine, run `npm run smoke`.
 
-## Manifest fields
+## Add another source
 
-| field     | notes                                                        |
-|-----------|--------------------------------------------------------------|
-| `id`      | lowercase-with-dashes, unique, matches the plugin object      |
-| `name`    | shown in Harbor's source list                                 |
-| `version` | semver string; bump it to ship an update                      |
-| `lang`    | ISO code — `en`, `ar`, `ja`, or `all` for multi-language      |
-| `nsfw`    | boolean; Harbor uses this for filtering                       |
-| `icon`    | absolute HTTPS URL, not a relative path                       |
-| `entry`   | path to the JS file, relative to `repo.json`                  |
+1. Copy `examples/source-template.plugin.js` into `plugins/`.
+2. Give it a unique lowercase ID and name.
+3. Implement `popular`, `search`, `detail`, `chapters`, and `pageUrls` for the target.
+4. Add the matching entry to `repo.json`.
+5. Run `npm run validate` and bump its manifest version whenever its code changes.
 
-## Shipping updates
+Plugins run in an isolated worker. They have no DOM, `fetch`, storage, cookies, or
+access to Harbor data. Use `harbor.http` for public HTTP(S) requests and
+`harbor.parseHtml` for HTML. Only target sites and content you are authorized to access,
+and follow their terms and applicable law.
 
-Edit the plugin, **bump `version` in `repo.json`**, push. Harbor sees the new
-version on the next repo refresh. If you don't bump the version, clients that
-already installed it may keep the cached copy.
+MangaDex requires attribution to MangaDex and to scanlation groups when chapters are
+shown. This plugin exposes group names in chapter metadata and this repository identifies
+MangaDex as the source. Review the current MangaDex acceptable-use terms before publishing
+derived applications or services.
 
-## Adding more sources
+## License
 
-Append another object to the `plugins` array and add its JS file. One repo can
-carry as many sources as you like — which is the real payoff: reinstalling
-your whole collection on a new device is one URL paste.
-
----
-
-## Writing the scraper
-
-Everything site-specific in `my-source.plugin.js` lives in two blocks at the
-top: `URLS` (the URL shapes) and `SEL` (the CSS selectors). Fill those in from
-the target site's HTML and the rest of the file usually works unchanged.
-
-Order of work that wastes the least time:
-
-1. `popular()` — get one grid of covers showing up. Nothing else matters until
-   listings render.
-2. `detail()` — title, cover, description.
-3. `chapters()` — get the ordering right; `number` drives sort, so pull the
-   numeral out of "Chapter 12.5" rather than trusting list order.
-4. `pageUrls()` — the hard one. If the reader lazy-loads, the real URL is in
-   `data-src`, not `src`. If there are no `<img>` tags at all, the page list is
-   JSON inside a `<script>` tag — the commented fallback in the file handles
-   that shape.
-
-Remember the sandbox: no `fetch`, no `document`, no storage. `harbor.http` and
-`harbor.parseHtml` are the entire surface.
-
-## Before you point this anywhere
-
-Harbor's own banner is the operative rule: publicly accessible pages only,
-nothing behind a login, paywall or access control, and never official or
-licensed publisher sites. A repo you publish is a repo other people may
-install, and what it scrapes is on you.
+Repository code is available under the [MIT License](LICENSE). Content, metadata,
+artwork, trademarks, and third-party services remain the property of their respective
+owners and are governed by their own terms.

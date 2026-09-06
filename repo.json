@@ -1,14 +1,15 @@
 {
+  "$schema": "./schema/repo.schema.json",
   "name": "Hamad's Manga Repo",
   "plugins": [
     {
-      "id": "my-source",
-      "name": "My Source",
+      "id": "mangadex",
+      "name": "MangaDex",
       "version": "1.0.0",
       "lang": "en",
       "nsfw": false,
-      "icon": "https://hamad0original-lgtm.github.io/harbor-manga-repo/icons/my-source.png",
-      "entry": "my-source.plugin.js"
+      "icon": "https://mangadex.org/favicon.ico",
+      "entry": "plugins/mangadex.plugin.js"
     }
   ]
 }
