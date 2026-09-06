@@ -1,8 +1,8 @@
 # Hamad's Harbor Manga Repo
 
 A personal [Harbor](https://github.com/harborstremio/harbor) manga source repository.
-It currently includes a working English-language MangaDex source using MangaDex's public
-API. No account, token, build step, or server is required.
+It includes English-language **Comix** and **MangaDex** sources. No account, build step,
+or server is required.
 
 ## Add it to Harbor
 
@@ -12,14 +12,28 @@ In Harbor, open **Manga → Set up a source → Extensions**, then add this URL:
 https://raw.githubusercontent.com/hamad0original-lgtm/harbor-manga-repo/main/repo.json
 ```
 
-Refresh the repository, install **MangaDex**, and enable it. GitHub Pages is optional;
-Harbor supports `raw.githubusercontent.com` directly.
+Refresh the repository, install a source, and enable it. **Comix is the recommended source
+on networks where MangaDex is blocked.** GitHub Pages is optional; Harbor supports
+`raw.githubusercontent.com` directly.
+
+## Sources
+
+| Source | Status | Notes |
+| --- | --- | --- |
+| Comix | Recommended | Live-tested catalogue, search, details, chapters, and reader pages |
+| MangaDex | Network-dependent | Its domains may be blocked or reset by some ISPs, DNS filters, or security products |
+
+If Harbor shows **This source did not respond** for MangaDex but the repository installed
+successfully, try opening `https://api.mangadex.org/ping` on the same device. If that host
+cannot connect, select Comix in **Manage Servers**; reinstalling the same MangaDex plugin
+cannot repair a network-level block.
 
 ## Repository layout
 
 ```text
 repo.json                          Harbor's install manifest
 plugins/mangadex.plugin.js         The installed MangaDex provider
+plugins/comix.plugin.js            The signed/encrypted Comix API provider
 examples/source-template.plugin.js A valid starting point for another source
 schema/repo.schema.json            Manifest schema for editors and CI
 scripts/validate.mjs               Dependency-free repository validator
@@ -36,10 +50,10 @@ npm test
 ```
 
 The validator checks the manifest, duplicate IDs, entry paths, JavaScript syntax, and
-the five required provider methods. The tests exercise all provider methods with mocked
-MangaDex responses. GitHub Actions runs both checks after every push and pull request.
+the five required provider methods. The tests exercise both providers with mocked
+responses. GitHub Actions runs both checks after every push and pull request.
 
-To make a small live request to MangaDex from your machine, run `npm run smoke`.
+Run `npm run smoke:comix` for a live Comix test or `npm run smoke` for MangaDex.
 
 ## Add another source
 

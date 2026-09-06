@@ -84,4 +84,78 @@ const tags = await plugin.tags();
 assert(tags.length === 1 && tags[0].name === "Action", "tag mapping failed");
 
 assert(requests.every((request) => request.options.responseType === "json"), "API requests must ask Harbor for JSON");
-console.log("All MangaDex provider contract tests passed.");
+console.log("MangaDex provider contract tests passed.");
+
+const comixRequests = [];
+const comixManga = {
+  hid: "test-hid",
+  title: "Test Comix",
+  altTitles: ["Alternate Test"],
+  synopsis: "Comix description",
+  poster: { large: "https://static.comix.to/cover.jpg" },
+  year: 2026,
+  status: "releasing",
+  contentRating: "safe",
+  latestChapter: 2,
+  authors: [{ title: "Test Writer" }],
+  artists: [{ title: "Test Artist" }],
+};
+
+const comixHarbor = {
+  async http(url, options) {
+    comixRequests.push({ url, options });
+    const parsed = new URL(url);
+    const path = parsed.pathname.replace("/api/v1", "");
+    let result;
+    if (path === "/manga/test-hid/chapters") {
+      const page = Number(parsed.searchParams.get("page"));
+      result = {
+        items: page === 1
+          ? [{ id: 101, number: 2, name: "Second", group: { name: "Test Scans" } }]
+          : [{ id: 100, number: 1, name: "First", isOfficial: true }],
+        meta: { lastPage: 2 },
+      };
+    } else if (path === "/manga/test-hid") {
+      result = comixManga;
+    } else if (path === "/chapters/101") {
+      result = { pages: { baseUrl: "https://static.comix.to/pages", items: [{ url: "1.jpg" }] } };
+    } else if (path === "/manga") {
+      result = { items: [comixManga], meta: { lastPage: 1 } };
+    } else {
+      throw new Error("Unexpected Comix request: " + url);
+    }
+    return { status: 200, ok: true, headers: {}, body: JSON.stringify({ result }) };
+  },
+};
+
+const comixSource = await readFile(resolve(import.meta.dirname, "../plugins/comix.plugin.js"), "utf8");
+const comix = new Function("harbor", comixSource + "\nreturn plugin;")(comixHarbor);
+
+const comixPopular = await comix.popular(28);
+assert(comixPopular.length === 1 && comixPopular[0].id === "test-hid", "Comix popular mapping failed");
+const popularUrl = new URL(comixRequests[0].url);
+assert(popularUrl.searchParams.get("page") === "2", "Comix offset-to-page mapping failed");
+assert(
+  popularUrl.searchParams.get("_") === "IZ-P1pUtzvpsKTY7dkbUEuwzSWypH3KIyulHx1WmsirlEp96jPXS7g",
+  "Comix request signature changed",
+);
+assert(comixRequests[0].options.responseType === "text", "Comix encrypted responses must be read as text");
+
+const comixSearch = await comix.search("test title", 0);
+assert(comixSearch[0].title === "Test Comix", "Comix search mapping failed");
+assert(new URL(comixRequests[1].url).searchParams.get("keyword") === "test title", "Comix search encoding failed");
+
+const comixDetail = await comix.detail("test-hid");
+assert(comixDetail.author === "Test Writer, Test Artist", "Comix creator mapping failed");
+
+const comixChapters = await comix.chapters("test-hid");
+assert(comixChapters.length === 2, "Comix chapter pagination failed");
+assert(comixChapters[0].chapter === "2" && comixChapters[0].group === "Test Scans", "Comix chapter mapping failed");
+assert(comixChapters[1].group === "Official", "Comix official chapter attribution failed");
+
+const comixPages = await comix.pageUrls("101");
+assert(comixPages[0].url === "https://static.comix.to/pages/1.jpg", "Comix page mapping failed");
+assert(comixPages[0].headers.Referer === "https://comix.to/", "Comix reader referer is missing");
+
+assert(comixRequests.every((request) => new URL(request.url).searchParams.has("_")), "Comix requests must be signed");
+console.log("Comix provider contract tests passed.");

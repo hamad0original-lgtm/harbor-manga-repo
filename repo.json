@@ -10,6 +10,15 @@
       "nsfw": false,
       "icon": "https://mangadex.org/favicon.ico",
       "entry": "plugins/mangadex.plugin.js"
+    },
+    {
+      "id": "comix",
+      "name": "Comix",
+      "version": "1.0.0",
+      "lang": "en",
+      "nsfw": false,
+      "icon": "https://comix.to/assets/uploads/35595e3de3c99889c1bd2c56f3e3714fc0c457.png",
+      "entry": "plugins/comix.plugin.js"
     }
   ]
 }

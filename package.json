@@ -1,12 +1,13 @@
 {
   "name": "harbor-manga-repo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "test": "node scripts/test.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:comix": "node scripts/smoke.mjs comix"
   },
   "engines": {
     "node": ">=20"
