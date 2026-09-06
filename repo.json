@@ -1,0 +1,14 @@
+{
+  "name": "Hamad's Manga Repo",
+  "plugins": [
+    {
+      "id": "my-source",
+      "name": "My Source",
+      "version": "1.0.0",
+      "lang": "en",
+      "nsfw": false,
+      "icon": "https://HAMAD.github.io/harbor-manga-repo/icons/my-source.png",
+      "entry": "my-source.plugin.js"
+    }
+  ]
+}
