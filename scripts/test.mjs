@@ -150,8 +150,8 @@ assert(comixDetail.author === "Test Writer, Test Artist", "Comix creator mapping
 
 const comixChapters = await comix.chapters("test-hid");
 assert(comixChapters.length === 2, "Comix chapter pagination failed");
-assert(comixChapters[0].chapter === "2" && comixChapters[0].group === "Test Scans", "Comix chapter mapping failed");
-assert(comixChapters[1].group === "Official", "Comix official chapter attribution failed");
+assert(comixChapters[0].chapter === "1" && comixChapters[0].group === "Official", "Comix chapter ordering failed");
+assert(comixChapters[1].chapter === "2" && comixChapters[1].group === "Test Scans", "Comix chapter mapping failed");
 
 const comixPages = await comix.pageUrls("101");
 assert(comixPages[0].url === "https://static.comix.to/pages/1.jpg", "Comix page mapping failed");

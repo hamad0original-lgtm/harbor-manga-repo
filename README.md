@@ -23,6 +23,9 @@ on networks where MangaDex is blocked.** GitHub Pages is optional; Harbor suppor
 | Comix | Recommended | Live-tested catalogue, search, details, chapters, and reader pages |
 | MangaDex | Network-dependent | Its domains may be blocked or reset by some ISPs, DNS filters, or security products |
 
+Comix version 1.0.1 returns chapters oldest-first, as Harbor expects, so **Read latest**
+opens the newest available chapter instead of the prologue.
+
 If Harbor shows **This source did not respond** for MangaDex but the repository installed
 successfully, try opening `https://api.mangadex.org/ping` on the same device. If that host
 cannot connect, select Comix in **Manage Servers**; reinstalling the same MangaDex plugin

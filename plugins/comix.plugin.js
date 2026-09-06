@@ -212,10 +212,17 @@ const plugin = {
       }
     }
     const seen = new Set();
-    return items.map(toChapter).filter((chapter) => {
+    const chapters = items.map(toChapter).filter((chapter) => {
       if (!chapter.id || seen.has(chapter.chapter)) return false;
       seen.add(chapter.chapter);
       return true;
+    });
+    return chapters.sort((left, right) => {
+      const leftNumber = Number.parseFloat(left.chapter || "");
+      const rightNumber = Number.parseFloat(right.chapter || "");
+      const a = Number.isFinite(leftNumber) ? leftNumber : Number.NEGATIVE_INFINITY;
+      const b = Number.isFinite(rightNumber) ? rightNumber : Number.NEGATIVE_INFINITY;
+      return a - b;
     });
   },
 
